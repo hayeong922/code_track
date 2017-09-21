@@ -21,74 +21,53 @@
 #include <memory.h>
 #include <string.h>
 
-#define MAXBUFSIZE  100 
-// #define BUFSIZE  2048 
+#define MAXBUFSIZE  100 //���� ������
+// #define BUFSIZE  2048 //���� ������
 
 #define FILENAME 100
 
 struct packet_header{
+    char command[FILENAME];
     char filename[FILENAME];
     int filesize;
 };
 
 int main(int argc, char *argv[]) {
-    int sock;                           //this is the socket
-    int nbytes;                         // number of bytes we receive in out message
+    int sock; 
+    int nbytes;
     unsigned int remote_length;         //length of the sockaddr_in structure
-    char buffer[MAXBUFSIZE];            // a buffer to stroe our received message
+    char buffer[MAXBUFSIZE];
     int left_size;
 
-    FILE *stream; 
+    FILE *stream; //���� �����
 
-    struct sockaddr_in sin, remote;     //"Internet socket address structure"
+    struct sockaddr_in sin, remote;
     struct packet_header header;
     // int clnt_addr_size;
     int addrlen = sizeof(sin);
 
     if (argc != 2) {
-        printf("usage: <port>\n");
+        printf("usage: %s port\n", argv[0]);
         exit(1);
     }
 
-    /******************
-      This code populates the sockaddr_in struct with
-      the information about our socket
-     ******************/
-    bzero(&sin,sizeof(sin));                    // zero the struct
-    sin.sin_family = AF_INET;                   // address family
-    sin.sin_addr.s_addr = htonl(INADDR_ANY);    // supplies the IP address of the local machine    
-    sin.sin_port = htons(atoi(argv[1]));        // htons() sets the port # to network byte order
+     // ���� ����
+    memset(&sin, 0, addrlen); //bzero((char *)&servaddr,addrlen);
+    sin.sin_family = AF_INET;
+    sin.sin_addr.s_addr = htonl(INADDR_ANY);
+    sin.sin_port = htons(atoi(argv[1])); //argv[1]���� port ��ȣ ������ ��
 
-    // causes the sustem to create a generic socket of type UDP(datagram)
     if ((sock = socket(PF_INET, SOCK_DGRAM, 0)) < 0) {
         perror("socket fail");
         exit(0);
     }
 
-    /******************
-      Once we've created a socket, we must bind that socket to the 
-      local address and port we've supplied in the sockaddr_in struct
-     ******************/
+    // ���� ���� �ּҷ� bind()
     if (bind(sock, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
         perror("bind fail");
         exit(0);
     }
 
-    remote_length = sizeof(remote);
-
-    // waits for an incoming message
-    bzero(buffer,sizeof(buffer));
-    nbytes = recvfrom(sock,buffer,MAXBUFSIZE,0,(struct sockaddre*)&remote,&remote_length);
-
-    printf("The client says %s\n",buffer);
-
-    // char msg[] = 'orange';
-    // nbytes = sendto()
-
-    // close(sock);
-
-    // file transmission part
-    bzero(buffer,sizeof(buffer));
     do{
         //���� �̸�
         remote_length = sizeof(remote);
@@ -96,6 +75,8 @@ int main(int argc, char *argv[]) {
 
         printf("filname: %s\n", header.filename);
         printf("File size: %d\n", header.filesize);
+        printf("command and filename: %s %s\n", header.command,header.filename);
+
 
         if ((stream = fopen(header.filename, "w+b")) == NULL){
             printf("File open Error");
@@ -118,7 +99,8 @@ int main(int argc, char *argv[]) {
                 exit(1);
             }
         } while (1);
-        printf("file transmission finished and saved in server\n");
+        // printf("file transmission finished\n");
+        printf("file transmission finished and saved\n");
         fclose(stream);
     } while (1);
     close(sock);

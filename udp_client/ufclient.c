@@ -66,7 +66,8 @@ int main(int argc, char *argv[]) {
         perror("unable to crate socket");
     }
 
-    char command[] = "put";
+    // char command[] = "put";
+    char command[] = "delete";
 
     while (1){
         printf("file name to send(q to quit): ");

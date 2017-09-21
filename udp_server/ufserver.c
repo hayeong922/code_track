@@ -38,6 +38,9 @@ int main(int argc, char *argv[]) {
     unsigned int remote_length;         //length of the sockaddr_in structure
     char buffer[MAXBUFSIZE];
     int left_size;
+    char check_command[MAXBUFSIZE];
+    int delete_status;                  // variable for deletion
+    char delete_file[MAXBUFSIZE];       // file name that will be deleted
 
     FILE *stream; //���� �����
 
@@ -77,6 +80,29 @@ int main(int argc, char *argv[]) {
         printf("File size: %d\n", header.filesize);
         printf("command and filename: %s %s\n", header.command,header.filename);
 
+        // exit gracefully condition
+        // strcat()
+        // strcpy(check_command,)
+        strcpy(check_command, header.command);
+        if(strcmp(check_command,"exit")==0){
+            printf("Command Exit\n");
+            exit(0);
+        }
+
+        if(strcmp(check_command,"delete")==0){
+            strcpy(delete_file,header.filename);
+            printf("file name that will be deleted %s\n",delete_file);
+            delete_status = remove(delete_file);
+
+            if(delete_status == 0){
+                printf("%s file deleted successfully.\n",delete_file);
+                break;
+            }else{
+                printf("Cannot find the file with that name.\n");
+                // break at this point but after plugging more commands make switch statement
+                break;
+            }
+        }
 
         if ((stream = fopen(header.filename, "w+b")) == NULL){
             printf("File open Error");

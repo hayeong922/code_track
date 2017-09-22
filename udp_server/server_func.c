@@ -43,15 +43,25 @@ struct packet_header{
 };
 
 int assign_command(char *cmd){
-    if(strcat(cmd,"get")== 0){
+    if(strcmp(cmd,"get")== 0){
+        printf("case get\n");
+        printf("get num %d",GET);
         return GET;
-    }else if(strcat(cmd,"put")== 0){
+    }else if(strcmp(cmd,"put")== 0){
+        printf("case put\n");
+        printf("put num %d",PUT);
         return PUT;
-    }else if(strcat(cmd,"delete")== 0){
+    }else if(strcmp(cmd,"delete")== 0){
+        printf("case delete\n");
+        printf("delete num %d",DELETE);
         return DELETE;
-    }else if(strcat(cmd,"ls")== 0){
+    }else if(strcmp(cmd,"ls")== 0){
+        printf("case ls\n");
+        printf("ls num %d",LS);
         return LS;
-    }else if(strcat(cmd,"exit")== 0){
+    }else if(strcmp(cmd,"exit")== 0){
+        printf("case exit\n");
+        printf("exit num %d",EXIT);
         return EXIT;
     }
 
@@ -142,15 +152,17 @@ int main(int argc, char *argv[]) {
         nbytes = recvfrom(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, &remote_length);
         // this is being recieved
 
-        printf("filname: %s\n", header.filename);
-        printf("File size: %d\n", header.filesize);
-        printf("command: %d\n", header.command);
+        // printf("filname: %s\n", header.filename);
+        // printf("File size: %d\n", header.filesize);
+        // printf("command: %s\n", header.command);
 
         // printf("command and filename: %s %s\n", header.command,header.filename);
 
         // strcpy(check_command, header.command);
         // call function that assign number to command input
         command_num = assign_command(header.command);
+        // command_num = 2;
+        printf("command_num: %d \n",command_num);
         strcpy(glob_filename,header.filename);
 
         switch(command_num){
@@ -158,7 +170,7 @@ int main(int argc, char *argv[]) {
                 run_get(glob_filename);
                 break;
             case PUT:
-                prtinf("*************put************\n");
+                printf("*************put************\n");
                 // run_put(sock,buffer,glob_filename,header.filesize);
                 if ((stream = fopen(header.filename, "w+b")) == NULL){
                     printf("File open Error");

@@ -140,7 +140,7 @@ int main(int argc, char *argv[]) {
 
         //send(header)
         strcpy(header.command,"get");
-        strcpy(header.filename,"pgm2.c");
+        strcpy(header.filename,"foo1");
         header.filesize = 100;
         sendto(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, addrlen);
 
@@ -160,9 +160,10 @@ int main(int argc, char *argv[]) {
         //file �̸� ���� �޾�����, fileũ�� ���۹޾Ҵٸ�
         //file ���� ���� �ޱ�
         do{
-            //���� ���� �޽��� nbyte ����,
+            printf("received loop\n");
             nbytes = recvfrom(sock, buffer, MAXBUFSIZE, 0, (struct sockaddr *)&remote, &remote_length);
             fwrite(buffer, 1, nbytes, stream);
+            printf("recevied %d\n",MAXBUFSIZE);
             left_size -= nbytes;
 
             if (left_size <= 0)

@@ -56,7 +56,9 @@ int main(int argc, char *argv[]) {
     struct sockaddr_in sin, remote;
     struct packet_header header;
     // int clnt_addr_size;
-    int addrlen = sizeof(sin);
+    // int addrlen = sizeof(sin);
+    int addrlen = sizeof(remote);
+
 
     if (argc != 2) {
         printf("usage: %s port\n", argv[0]);
@@ -82,12 +84,14 @@ int main(int argc, char *argv[]) {
 
     do{
         //���� �̸�
-        printf("in the loop\n");
-        nbytes = recvfrom(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, &remote_length);
+        // printf("in the loop\n");
+        // nbytes = recvfrom(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, &remote_length);
+        nbytes = recvfrom(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, sizeof(remote));
 
-        printf("filname: %s\n", header.filename);
+
+        // printf("filname: %s\n", header.filename);
         // printf("File size: %d\n", header.filesize);
-        printf("command and filename: %s %s\n", header.command,header.filename);
+        // printf("command and filename: %s %s\n\n", header.command,header.filename);
 
         // exit gracefully condition
         // strcat()
@@ -165,21 +169,28 @@ int main(int argc, char *argv[]) {
         }
 
         if(stream){
+            strcpy(header.filename,buffer);
 
             fseek(stream, 0, SEEK_END); // end fo file
             header.filesize = ftell(stream);    // current value of the position indicator is returned
 
             // this part is added
             // strcpy(header.command,command);
-            printf("send header(command,filename, filesize)\n");
             //send file name
-            sendto(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, addrlen);
-            
+            // sendto(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, addrlen);
+                        
             fseek(stream,0,SEEK_SET);
+
+            printf("sending\n");
+
+            //printf("nbytes %d\n",fread(buffer,1,MAXBUFSIZE,stream));
+
 
             while((nbytes = fread(buffer,1,MAXBUFSIZE,stream))!=0)
             {
-                sendto(sock,buffer,nbytes,0,(struct sockaddr*)&remote,addrlen);
+                int result = sendto(sock,buffer,nbytes,0,(struct sockaddr*)&remote,sizeof(remote));
+                printf("nbytes being send: %d\n",nbytes);
+                printf("%d\n",result);
             }
             fclose(stream);
 

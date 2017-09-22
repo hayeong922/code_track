@@ -1,12 +1,3 @@
-// #include <stdio.h>
-// #include <stdlib.h>
-// #include <string.h>
-// #include <sys/types.h>
-// #include <sys/socket.h>
-// #include <netinet/in.h>
-// #include <arpa/inet.h>
-// #include <unistd.h>
-
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -26,10 +17,31 @@
 
 #define FILENAME 100
 
+char glob_cmd[MAXBUFSIZE];
+char glob_filename[MAXBUFSIZE];
+
 struct packet_header{
+    char command[FILENAME];
     char filename[FILENAME];
     int filesize;
 };
+
+void split_func(char *s){
+    printf("token start\n");
+    char *token = strtok(s," ");
+
+    int count = 0;
+    while(token != NULL){
+        if(count == 0){
+            strcpy(glob_cmd,token);
+        }else{
+                strcpy(glob_filename, token);
+        }
+        printf("%s\n",token);
+        token = strtok(NULL," ");
+        count++;
+    }
+}
 
 int main(int argc, char *argv[]) {
     int sock; //socket
@@ -60,15 +72,25 @@ int main(int argc, char *argv[]) {
     remote.sin_addr.s_addr = inet_addr(argv[1]); //argv[1]���� �ּҸ� ������
     remote.sin_port = htons(atoi(argv[2])); //argv[2]���� port�� ������
 
-   //socket ���� 0���� ������ Error
     if ((sock = socket(PF_INET, SOCK_DGRAM, 0)) < 0) {
         perror("unable to crate socket");
     }
 
+    // char command[] = "put";
+    char command[] = "delete";
+
     while (1){
-        printf("file name to send(q to quit): ");
+        printf("Put command(and filename):");
         fgets(buffer, MAXBUFSIZE, stdin);
         buffer[strlen(buffer) - 1] = 0;
+
+        // take the input and split by spacce and assign command file name to global var
+        split_func(buffer);
+        
+        strcpy(buffer,glob_filename);
+        strcpy(command,glob_cmd);
+        printf("command and file name %s, %s\n",glob_cmd, glob_filename);
+        printf("buffer %s after assignment\n",buffer);
 
         if (!strcmp(buffer, "q"))
             break;
@@ -83,15 +105,19 @@ int main(int argc, char *argv[]) {
         {
             strcpy(header.filename, buffer);
 
-            fseek(stream, 0, SEEK_END); //������ ��
-            header.filesize = ftell(stream);
+            fseek(stream, 0, SEEK_END); // end fo file
+            header.filesize = ftell(stream);    // current value of the position indicator is returned
 
-            printf("send header(filename, filesize)\n");
+            // this part is added
+            strcpy(header.command,command);
 
-            //�����̸��� ���� ������ ������(header)
+            printf("send header(command,filename, filesize)\n");
+            // printf("send header(filename, filesize)\n");
+
+            //send(header)
             sendto(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, addrlen);
 
-            fseek(stream, 0, SEEK_SET); //������ ����
+            fseek(stream, 0, SEEK_SET); //seek beginning of the file
 
             while ((nbytes = fread(buffer,1,MAXBUFSIZE,stream)) != 0)
             {

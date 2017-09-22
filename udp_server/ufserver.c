@@ -104,7 +104,8 @@ int main(int argc, char *argv[]) {
             }
         }
 
-        if ((stream = fopen(header.filename, "w+b")) == NULL){
+        if(strcmp(check_command,"put")== 0){
+            if ((stream = fopen(header.filename, "w+b")) == NULL){
             printf("File open Error");
             exit(1);
         }
@@ -128,6 +129,8 @@ int main(int argc, char *argv[]) {
         // printf("file transmission finished\n");
         printf("file transmission finished and saved\n");
         fclose(stream);
+     }
+        
     } while (1);
     close(sock);
     return 0;

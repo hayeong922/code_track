@@ -67,7 +67,7 @@ int main(int argc, char *argv[]) {
     }
 
     // char command[] = "put";
-    char command[] = "delete";
+    char command[] = "ls";
 
     while (1){
         printf("file name to send(q to quit): ");

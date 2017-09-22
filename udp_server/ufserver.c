@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <memory.h>
 #include <string.h>
+#include <dirent.h>
 
 #define MAXBUFSIZE  100 //���� ������
 // #define BUFSIZE  2048 //���� ������
@@ -43,6 +44,16 @@ int main(int argc, char *argv[]) {
     char delete_file[MAXBUFSIZE];       // file name that will be deleted
 
     FILE *stream; //���� �����
+    // for ls command
+    // DIR *dir;
+    // struct dirent *ent;
+    // if((dir = opendir("udp_server")!= NULL){
+    //     while(())
+    // })
+    DIR *d;
+    struct dirent *dir;
+
+
 
     struct sockaddr_in sin, remote;
     struct packet_header header;
@@ -102,6 +113,20 @@ int main(int argc, char *argv[]) {
                 // break at this point but after plugging more commands make switch statement
                 break;
             }
+        }
+
+        if(strcmp(check_command,"ls")==0){
+            d = opendir(".");
+            if(d){
+                while((dir = readdir(d)) != NULL)
+                if(dir->d_type == DT_REG){
+                    printf("%s\n",dir->d_name);
+                }
+                closedir(d);
+            }
+            // tsystem("ls");
+            break;
+            // or return 0
         }
 
         if(strcmp(check_command,"put")== 0){

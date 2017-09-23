@@ -172,10 +172,11 @@ int main(int argc, char *argv[]) {
                         }
                         // printf("********File sent!!!!!!*****\n");
                         fclose(stream);
-                        close(sock); //socket close
                         break;
                     }
                     printf("send file data\n");
+                    strcpy(header.command,"successful file transmission.\n");
+
                 // run_get(glob_filename);
                 break;
             case PUT:

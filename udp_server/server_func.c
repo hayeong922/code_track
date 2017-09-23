@@ -95,6 +95,7 @@ int main(int argc, char *argv[]) {
     char check_command[MAXBUFSIZE];
     int delete_status;                  // variable for deletion
     char delete_file[MAXBUFSIZE];       // file name that will be deleted
+    char msg[MAXBUFSIZE];
 
     FILE *stream; //���� �����
 
@@ -209,19 +210,19 @@ int main(int argc, char *argv[]) {
                 // char msg[] ="File transimission finished and saved\n";
                 // strcpy(header.command,msg);
                 // sendto(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, addrlen);
-                printf("file transmission finished and saved\n");
-                char msg[] ="File transimission finished and saved\n";
+                printf("file transmission finished and saved.\n");
+                // char msg[] ="File transimission finished and saved\n";
 
-                strcpy(header.command,msg);
-                sendto(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, addrlen);
+                strcpy(header.command,"file transmission finished and saved.\n");
+                // sendto(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, addrlen);
                 fclose(stream);
                 break;
             case DELETE:
                 //imp
                 run_delete(glob_filename);
                 // char msg[] ="deletion successful\n";
-                strcpy(header.command,"deletion successful\n");
-                sendto(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, addrlen);
+                strcpy(header.command,"deletion successful.\n");
+                // sendto(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, addrlen);
                 break;
             case LS:
                 //imp
@@ -237,8 +238,8 @@ int main(int argc, char *argv[]) {
                     closedir(d);
                 }
                 // char msg[] ="sent a list of files in current directory\n";
-                strcpy(header.command,"sent a list of files in current directory\n");
-                sendto(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, addrlen);
+                strcpy(header.command,"sent a list of files in current directory.\n");
+                // sendto(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, addrlen);
                 break;
             case EXIT:
                 //imp
@@ -256,7 +257,7 @@ int main(int argc, char *argv[]) {
         // sendto(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, addrlen);
         // char msg[] ="File transimission finished and saved\n";
         // strcpy(header.command,msg);
-        // sendto(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, addrlen);
+        sendto(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, addrlen);
         // printf("file transmission finished and saved\n");
     
     } while (1);

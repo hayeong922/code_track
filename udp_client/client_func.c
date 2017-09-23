@@ -45,46 +45,7 @@ int assign_command(char *cmd){
     }
 }
 
-void run_get(char *filename){
-
-}
-
-void run_put(char *filename, int filesize){
-       
-}
-
-void run_exit(char *filename){
-    printf("Command Exit\n");
-    exit(0);
-}
-
-void run_delete(char *filename){
-    printf("file name that will be deleted %s\n",filename);
-    int delete_status;
-    delete_status = remove(filename);
-
-    if(delete_status == 0){
-        printf("%s file deleted successfully.\n",filename);
-    }else{
-        printf("Cannot find the file with that name.\n");
-        // break at this point but after plugging more commands make switch statement
-    }    
-}
-
-// void run_ls(DIR *d, struct dirent *dir){
-//     d = opendir(".");
-//     if(d){
-//         while((dir = readdir(d)) != NULL)
-//         if(dir->d_type == DT_REG){
-//             printf("%s\n",dir->d_name);
-//         }
-//         closedir(d);
-//     }
-    
-// }
-
 void split_func(char *s){
-    printf("token start\n");
     char *token = strtok(s," ");
 
     int count = 0;
@@ -94,7 +55,6 @@ void split_func(char *s){
         }else{
                 strcpy(glob_filename, token);
         }
-        printf("%s\n",token);
         token = strtok(NULL," ");
         count++;
     }
@@ -127,27 +87,23 @@ int main(int argc, char *argv[]) {
       information regarding where we'd like to send our packet 
       i.e the Server.
      ******************/    
-    // bind for both to interact(recvfrom and sendto) 
 
-    bzero(&remote,sizeof(remote)); //bzero((char *)&servaddr, sizeof(servaddr));
-    remote.sin_family = AF_INET; //���ͳ� Addr Family
-    remote.sin_addr.s_addr = inet_addr(argv[1]); //argv[1]���� �ּҸ� ������
-    remote.sin_port = htons(atoi(argv[2])); //argv[2]���� port�� ������
+    bzero(&remote,sizeof(remote)); 
+    remote.sin_family = AF_INET; 
+    remote.sin_addr.s_addr = inet_addr(argv[1]); 
+    remote.sin_port = htons(atoi(argv[2])); 
 
-
-    bzero(&sin,sizeof(sin)); //bzero((char *)&servaddr, sizeof(servaddr));
-    sin.sin_family = AF_INET; //���ͳ� Addr Family
-    sin.sin_addr.s_addr = htonl(INADDR_ANY); //argv[1]���� �ּҸ� ������
-    sin.sin_port = htons(atoi("5002"));  //argv[2]���� port�� ������
+    bzero(&sin,sizeof(sin)); 
+    sin.sin_family = AF_INET; 
+    sin.sin_addr.s_addr = htonl(INADDR_ANY); 
+    sin.sin_port = htons(atoi("5002"));  
     
 
     if ((sock = socket(PF_INET, SOCK_DGRAM, 0)) < 0) {
         perror("unable to crate socket");
     }
 
-    // char command[] = "put";
     char command[] = "delete";
-
     while (1){
         printf("Put command(and filename):");
         fgets(buffer, MAXBUFSIZE, stdin);
@@ -158,8 +114,6 @@ int main(int argc, char *argv[]) {
         
         strcpy(buffer,glob_filename);
         strcpy(command,glob_cmd);
-        printf("command and file name %s, %s\n",glob_cmd, glob_filename);
-        printf("buffer %s after assignment\n",buffer);
 
         command_num = assign_command(command);
 
@@ -217,11 +171,14 @@ int main(int argc, char *argv[]) {
                         {
                             sendto(sock, buffer, nbytes, 0, (struct sockaddr*)&remote, addrlen);
                         }
+                        printf("send file data\n");
                         fclose(stream);
-                        close(sock); //socket close
+                        // close(sock); //socket close
                         break;
                     }
                     printf("send file data\n");
+                    // recvfrom(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, &remote_length);
+                    // printf("Server says %s\n",header.command);
                 break;
             case DELETE:
                 strcpy(header.filename,buffer);
@@ -234,24 +191,26 @@ int main(int argc, char *argv[]) {
                 
                 do{
                     nbytes = recvfrom(sock, buffer, MAXBUFSIZE, 0, (struct sockaddr *)&remote, &remote_length);
-                    // printf("received %d\n",nbytes);
-                    printf("%s\n",buffer);
-                    // left_size -= nbytes;
-
-                    // if (left_size <= 0)
-                    //     break;
                     if (nbytes < 0) {
                         break;
                         perror("recvfrom fail");
                         exit(1);
                     }
                 } while (1);
+                printf("file successfully received\n");
                 break;
             case EXIT:
                 strcpy(header.command,command);
                 sendto(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, addrlen);
                 break;
-        }    
+        }  
+
+
+        // this part is message receiveing from server, recvfrom()
+        // recvfrom(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, &remote_length);
+                    // printf("Server says %s\n",header.command);
+        //printf("Server says %s\n",buffer);  
     }
+    close(sock);
     return 0;
 }

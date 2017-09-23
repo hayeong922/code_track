@@ -35,24 +35,14 @@ struct packet_header{
 
 int assign_command(char *cmd){
     if(strcmp(cmd,"get")== 0){
-        printf("case get\n");
-        printf("get num %d",GET);
         return GET;
     }else if(strcmp(cmd,"put")== 0){
-        printf("case put\n");
-        printf("put num %d",PUT);
         return PUT;
     }else if(strcmp(cmd,"delete")== 0){
-        printf("case delete\n");
-        printf("delete num %d",DELETE);
         return DELETE;
     }else if(strcmp(cmd,"ls")== 0){
-        printf("case ls\n");
-        printf("ls num %d",LS);
         return LS;
     }else if(strcmp(cmd,"exit")== 0){
-        printf("case exit\n");
-        printf("exit num %d",EXIT);
         return EXIT;
     }
 
@@ -143,7 +133,11 @@ int main(int argc, char *argv[]) {
 
     do{
         remote_length = sizeof(remote);
+        // this is the part where I receive command and sometimes file name as well
         nbytes = recvfrom(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, &remote_length);
+        printf("The client says %s %s\n",header.command, header.filename);
+        // have to write parameter when there is no file name and just command
+
         // this is being recieved
 
         // printf("filname: %s\n", header.filename);
@@ -155,8 +149,6 @@ int main(int argc, char *argv[]) {
         // strcpy(check_command, header.command);
         // call function that assign number to command input
         command_num = assign_command(header.command);
-        // command_num = 2;
-        printf("command_num: %d \n",command_num);
         strcpy(glob_filename,header.filename);
 
         switch(command_num){
@@ -167,12 +159,14 @@ int main(int argc, char *argv[]) {
                         printf("Error");
                         exit(1);
                     }
+
                     if (stream)
                     {
                         strcpy(header.filename, buffer);
 
                         fseek(stream, 0, SEEK_END); // end fo file
                         header.filesize = ftell(stream);    // current value of the position indicator is returned
+
                         // this part is added
                         strcpy(header.command,"get");
 
@@ -184,8 +178,8 @@ int main(int argc, char *argv[]) {
                         while ((nbytes = fread(buffer,1,MAXBUFSIZE,stream)) != 0)
                         {
                             sendto(sock, buffer, nbytes, 0, (struct sockaddr*)&remote, addrlen);
-                            printf("sent %d\n",nbytes);
                         }
+                        // printf("********File sent!!!!!!*****\n");
                         fclose(stream);
                         close(sock); //socket close
                         break;
@@ -212,6 +206,9 @@ int main(int argc, char *argv[]) {
                         exit(1);
                     }
                 } while (1);
+                // char msg[] ="File transimission finished and saved\n";
+                // strcpy(header.command,msg);
+                // sendto(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, addrlen);
                 printf("file transmission finished and saved\n");
                 fclose(stream);
                 break;
@@ -239,7 +236,14 @@ int main(int argc, char *argv[]) {
                 break;
 
         }
-        
+        //when out of break after finished the mission send message to client, sendto()
+        // char msg[]=""
+        // sendto(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, addrlen);
+        // char msg[] ="File transimission finished and saved\n";
+                // strcpy(header.command,msg);
+                // sendto(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, addrlen);
+                // printf("file transmission finished and saved\n");
+    
     } while (1);
     close(sock);
     return 0;

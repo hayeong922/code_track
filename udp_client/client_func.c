@@ -177,6 +177,9 @@ int main(int argc, char *argv[]) {
                         break;
                     }
                     printf("send file data\n");
+
+                    recvfrom(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, &remote_length);
+                    printf("Server says %s\n",header.command);
                     // recvfrom(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, &remote_length);
                     // printf("Server says %s\n",header.command);
                 break;
@@ -184,32 +187,43 @@ int main(int argc, char *argv[]) {
                 strcpy(header.filename,buffer);
                 strcpy(header.command,command);
                 sendto(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, addrlen);
+
+                recvfrom(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, &remote_length);
+                printf("Server says %s\n",header.command);
                 break;
             case LS:
                 strcpy(header.command,command);
+                strcpy(header.filename,"");
                 sendto(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, addrlen);
                 
                 do{
                     nbytes = recvfrom(sock, buffer, MAXBUFSIZE, 0, (struct sockaddr *)&remote, &remote_length);
+                    printf("%s\n",buffer);
                     if (nbytes < 0) {
                         break;
                         perror("recvfrom fail");
                         exit(1);
                     }
                 } while (1);
-                printf("file successfully received\n");
+                // printf("file successfully received\n");
+                recvfrom(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, &remote_length);
+                printf("Server says %s\n",header.command);
                 break;
             case EXIT:
                 strcpy(header.command,command);
+                strcpy(header.filename,"");
                 sendto(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, addrlen);
+
+                recvfrom(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, &remote_length);
+                printf("Server says %s\n",header.command);
                 break;
         }  
 
 
         // this part is message receiveing from server, recvfrom()
         // recvfrom(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, &remote_length);
-                    // printf("Server says %s\n",header.command);
-        //printf("Server says %s\n",buffer);  
+        // printf("Server says %s\n",header.command);
+        // printf("Server says %s\n",buffer);  
     }
     close(sock);
     return 0;

@@ -81,10 +81,10 @@ void run_ls(DIR *d, struct dirent *dir){
     
 }
 
-void run_exit(char *filename){
-    printf("Command Exit\n");
-    exit(0);
-}
+// void run_exit(char *filename){
+//     printf("Command Exit\n");
+//     exit(0);
+// }
 
 int main(int argc, char *argv[]) {
     int sock; 
@@ -135,7 +135,7 @@ int main(int argc, char *argv[]) {
         remote_length = sizeof(remote);
         // this is the part where I receive command and sometimes file name as well
         nbytes = recvfrom(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, &remote_length);
-        printf("The client says %s %s\n",header.command, header.filename);
+        printf("\nThe client say: %s %s\n",header.command, header.filename);
         // have to write parameter when there is no file name and just command
 
         // this is being recieved
@@ -210,11 +210,18 @@ int main(int argc, char *argv[]) {
                 // strcpy(header.command,msg);
                 // sendto(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, addrlen);
                 printf("file transmission finished and saved\n");
+                char msg[] ="File transimission finished and saved\n";
+
+                strcpy(header.command,msg);
+                sendto(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, addrlen);
                 fclose(stream);
                 break;
             case DELETE:
                 //imp
                 run_delete(glob_filename);
+                // char msg[] ="deletion successful\n";
+                strcpy(header.command,"deletion successful\n");
+                sendto(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, addrlen);
                 break;
             case LS:
                 //imp
@@ -225,14 +232,22 @@ int main(int argc, char *argv[]) {
                     if(dir->d_type == DT_REG){
                         strcpy(buffer,dir->d_name);
                         sendto(sock, buffer, nbytes, 0, (struct sockaddr*)&remote, addrlen);
-                        printf("%s\n",dir->d_name);
+                        // printf("%s\n",dir->d_name);
                     }
                     closedir(d);
                 }
+                // char msg[] ="sent a list of files in current directory\n";
+                strcpy(header.command,"sent a list of files in current directory\n");
+                sendto(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, addrlen);
                 break;
             case EXIT:
                 //imp
-                run_exit(glob_filename);
+                // run_exit(glob_filename);
+                // char msg[] ="graceful exit\n";
+                strcpy(header.command,"graceful exit\n");
+                sendto(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, addrlen);
+
+                exit(0);
                 break;
 
         }
@@ -240,9 +255,9 @@ int main(int argc, char *argv[]) {
         // char msg[]=""
         // sendto(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, addrlen);
         // char msg[] ="File transimission finished and saved\n";
-                // strcpy(header.command,msg);
-                // sendto(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, addrlen);
-                // printf("file transmission finished and saved\n");
+        // strcpy(header.command,msg);
+        // sendto(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, addrlen);
+        // printf("file transmission finished and saved\n");
     
     } while (1);
     close(sock);

@@ -194,7 +194,6 @@ int main(int argc, char *argv[]) {
                 } while (1);
                 printf("file transmission finished and saved\n");
                 fclose(stream);
-
                 break;
             case PUT:
                     if ((stream = fopen(buffer, "rb")) == 0){
@@ -232,6 +231,21 @@ int main(int argc, char *argv[]) {
             case LS:
                 strcpy(header.command,command);
                 sendto(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, addrlen);
+                
+                do{
+                    nbytes = recvfrom(sock, buffer, MAXBUFSIZE, 0, (struct sockaddr *)&remote, &remote_length);
+                    // printf("received %d\n",nbytes);
+                    printf("%s\n",buffer);
+                    // left_size -= nbytes;
+
+                    // if (left_size <= 0)
+                    //     break;
+                    if (nbytes < 0) {
+                        break;
+                        perror("recvfrom fail");
+                        exit(1);
+                    }
+                } while (1);
                 break;
             case EXIT:
                 strcpy(header.command,command);

@@ -226,6 +226,8 @@ int main(int argc, char *argv[]) {
                 if(d){
                     while((dir = readdir(d)) != NULL)
                     if(dir->d_type == DT_REG){
+                        strcpy(buffer,dir->d_name);
+                        sendto(sock, buffer, nbytes, 0, (struct sockaddr*)&remote, addrlen);
                         printf("%s\n",dir->d_name);
                     }
                     closedir(d);

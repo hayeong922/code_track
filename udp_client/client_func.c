@@ -12,10 +12,15 @@
 #include <memory.h>
 #include <errno.h>
 
-#define MAXBUFSIZE  100 //���� ������
-// #define BUFSIZE  1024 //���� ������
+#define MAXBUFSIZE  100 
 
 #define FILENAME 100
+
+#define GET 1
+#define PUT 2
+#define DELETE 3
+#define LS 4
+#define EXIT 5
 
 char glob_cmd[MAXBUFSIZE];
 char glob_filename[MAXBUFSIZE];
@@ -25,6 +30,58 @@ struct packet_header{
     char filename[FILENAME];
     int filesize;
 };
+
+int assign_command(char *cmd){
+    if(strcmp(cmd,"get")== 0){
+        return GET;
+    }else if(strcmp(cmd,"put")== 0){
+        return PUT;
+    }else if(strcmp(cmd,"delete")== 0){
+        return DELETE;
+    }else if(strcmp(cmd,"ls")== 0){
+        return LS;
+    }else if(strcmp(cmd,"exit")== 0){
+        return EXIT;
+    }
+}
+
+void run_get(char *filename){
+
+}
+
+void run_put(char *filename, int filesize){
+       
+}
+
+void run_exit(char *filename){
+    printf("Command Exit\n");
+    exit(0);
+}
+
+void run_delete(char *filename){
+    printf("file name that will be deleted %s\n",filename);
+    int delete_status;
+    delete_status = remove(filename);
+
+    if(delete_status == 0){
+        printf("%s file deleted successfully.\n",filename);
+    }else{
+        printf("Cannot find the file with that name.\n");
+        // break at this point but after plugging more commands make switch statement
+    }    
+}
+
+// void run_ls(DIR *d, struct dirent *dir){
+//     d = opendir(".");
+//     if(d){
+//         while((dir = readdir(d)) != NULL)
+//         if(dir->d_type == DT_REG){
+//             printf("%s\n",dir->d_name);
+//         }
+//         closedir(d);
+//     }
+    
+// }
 
 void split_func(char *s){
     printf("token start\n");
@@ -51,9 +108,10 @@ int main(int argc, char *argv[]) {
 
     FILE *stream; //���� �����
 
-    struct sockaddr_in remote;
+    struct sockaddr_in sin,remote;
     struct packet_header header;
-    int addrlen = sizeof(remote); //���� �ּ��� size�� ����
+    int addrlen = sizeof(remote); 
+    int command_num;
 
     //./fclient.c ip�ּ�, ��Ʈ��ȣ
     // if (argc != 3) {
@@ -67,10 +125,19 @@ int main(int argc, char *argv[]) {
       information regarding where we'd like to send our packet 
       i.e the Server.
      ******************/    
-     bzero(&remote,sizeof(remote)); //bzero((char *)&servaddr, sizeof(servaddr));
+    // bind for both to interact(recvfrom and sendto) 
+
+    bzero(&remote,sizeof(remote)); //bzero((char *)&servaddr, sizeof(servaddr));
     remote.sin_family = AF_INET; //���ͳ� Addr Family
     remote.sin_addr.s_addr = inet_addr(argv[1]); //argv[1]���� �ּҸ� ������
     remote.sin_port = htons(atoi(argv[2])); //argv[2]���� port�� ������
+
+
+    bzero(&sin,sizeof(sin)); //bzero((char *)&servaddr, sizeof(servaddr));
+    sin.sin_family = AF_INET; //���ͳ� Addr Family
+    sin.sin_addr.s_addr = htonl(INADDR_ANY); //argv[1]���� �ּҸ� ������
+    sin.sin_port = htons(atoi("5002"));  //argv[2]���� port�� ������
+    
 
     if ((sock = socket(PF_INET, SOCK_DGRAM, 0)) < 0) {
         perror("unable to crate socket");
@@ -92,42 +159,55 @@ int main(int argc, char *argv[]) {
         printf("command and file name %s, %s\n",glob_cmd, glob_filename);
         printf("buffer %s after assignment\n",buffer);
 
-        if (!strcmp(buffer, "q"))
-            break;
+        command_num = assign_command(command);
 
-        if ((stream = fopen(buffer, "rb")) == 0){
-            printf("Error");
-            exit(1);
-        }
+        switch(command_num){
+            case GET:
+                break;
+            // this works
+            case PUT:
+                    if ((stream = fopen(buffer, "rb")) == 0){
+                        printf("Error");
+                        exit(1);
+                    }
+                    if (stream)
+                    {
+                        strcpy(header.filename, buffer);
 
-        //stream ���� ���� �б�
-        if (stream)
-        {
-            strcpy(header.filename, buffer);
+                        fseek(stream, 0, SEEK_END); // end fo file
+                        header.filesize = ftell(stream);    // current value of the position indicator is returned
+                        // this part is added
+                        strcpy(header.command,command);
 
-            fseek(stream, 0, SEEK_END); // end fo file
-            header.filesize = ftell(stream);    // current value of the position indicator is returned
+                        sendto(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, addrlen);
 
-            // this part is added
-            strcpy(header.command,command);
+                        fseek(stream, 0, SEEK_SET); //seek beginning of the file
 
-            printf("send header(command,filename, filesize)\n");
-            // printf("send header(filename, filesize)\n");
+                        while ((nbytes = fread(buffer,1,MAXBUFSIZE,stream)) != 0)
+                        {
+                            sendto(sock, buffer, nbytes, 0, (struct sockaddr*)&remote, addrlen);
+                        }
+                        fclose(stream);
+                        close(sock); //socket close
+                        break;
+                    }
+                    printf("send file data\n");
+                break;
+            case DELETE:
+                strcpy(header.filename,buffer);
+                strcpy(header.command,command);
 
-            //send(header)
-            sendto(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, addrlen);
-
-            fseek(stream, 0, SEEK_SET); //seek beginning of the file
-
-            while ((nbytes = fread(buffer,1,MAXBUFSIZE,stream)) != 0)
-            {
-                sendto(sock, buffer, nbytes, 0, (struct sockaddr*)&remote, addrlen);
-            }
-            fclose(stream);
-            close(sock); //socket close
-            break;
-        }
-        printf("send file data\n");
+                sendto(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, addrlen);
+                break;
+            case LS:
+                strcpy(header.command,command);
+                sendto(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, addrlen);
+                break;
+            case EXIT:
+                strcpy(header.command,command);
+                sendto(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, addrlen);
+                break;
+        }    
     }
     return 0;
 }

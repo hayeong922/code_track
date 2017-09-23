@@ -22,8 +22,7 @@
 #include <string.h>
 #include <dirent.h>
 
-#define MAXBUFSIZE  100 //���� ������
-// #define BUFSIZE  2048 //���� ������
+#define MAXBUFSIZE  100 
 
 #define FILENAME 100
 
@@ -162,6 +161,7 @@ int main(int argc, char *argv[]) {
         // call function that assign number to command input
         command_num = assign_command(header.command);
         // command_num = 2;
+        printf("command result: %d\n",strcmp(header.command,"delete"));
         printf("command_num: %d \n",command_num);
         strcpy(glob_filename,header.filename);
 

@@ -198,15 +198,18 @@ int main(int argc, char *argv[]) {
                 
                 do{
                     nbytes = recvfrom(sock, buffer, MAXBUFSIZE, 0, (struct sockaddr *)&remote, &remote_length);
+                    if(strcmp(buffer,"-1")== 0){
+                        break;
+                    }
                     printf("%s\n",buffer);
+
                     if (nbytes < 0) {
                         break;
                         perror("recvfrom fail");
                         exit(1);
                     }
                 } while (1);
-                // printf("file successfully received\n");
-                recvfrom(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, &remote_length);
+                // recvfrom(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, &remote_length);
                 // printf("Server says %s\n",header.command);
                 break;
             case EXIT:

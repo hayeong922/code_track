@@ -139,16 +139,6 @@ int main(int argc, char *argv[]) {
         printf("\nThe client say: %s %s\n",header.command, header.filename);
         // have to write parameter when there is no file name and just command
 
-        // this is being recieved
-
-        // printf("filname: %s\n", header.filename);
-        // printf("File size: %d\n", header.filesize);
-        // printf("command: %s\n", header.command);
-
-        // printf("command and filename: %s %s\n", header.command,header.filename);
-
-        // strcpy(check_command, header.command);
-        // call function that assign number to command input
         command_num = assign_command(header.command);
         strcpy(glob_filename,header.filename);
 
@@ -229,13 +219,15 @@ int main(int argc, char *argv[]) {
                 // run_ls(&d,&dir);
                 d = opendir(".");
                 if(d){
-                    while((dir = readdir(d)) != NULL)
-                    if(dir->d_type == DT_REG){
-                        strcpy(buffer,dir->d_name);
-                        sendto(sock, buffer, nbytes, 0, (struct sockaddr*)&remote, addrlen);
-                        // printf("%s\n",dir->d_name);
-                    }
+                    while((dir = readdir(d)) != NULL){
+                        if(dir->d_type == DT_REG){
+                            strcpy(buffer,dir->d_name);
+                            sendto(sock, buffer, nbytes, 0, (struct sockaddr*)&remote, addrlen);
+                            // printf("%s\n",dir->d_name);
+                        }
+                }
                     closedir(d);
+                    sendto(sock, "-1", nbytes, 0, (struct sockaddr*)&remote, addrlen);
                 }
                 // char msg[] ="sent a list of files in current directory\n";
                 strcpy(header.command,"sent a list of files in current directory.\n");

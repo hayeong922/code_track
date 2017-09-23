@@ -112,6 +112,8 @@ int main(int argc, char *argv[]) {
     struct packet_header header;
     int addrlen = sizeof(remote); 
     int command_num;
+    int left_size;
+    unsigned int remote_length;
 
     //./fclient.c ip�ּ�, ��Ʈ��ȣ
     // if (argc != 3) {
@@ -163,8 +165,37 @@ int main(int argc, char *argv[]) {
 
         switch(command_num){
             case GET:
+                printf("Get command!\n");
+                strcpy(header.filename,buffer);
+                strcpy(header.command,command);
+                sendto(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, addrlen);
+                
+                remote_length = sizeof(remote);
+                // what size and receive
+                nbytes = recvfrom(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, &remote_length);
+                // this is being recieved
+                if ((stream = fopen(header.filename, "w+b")) == NULL){
+                    printf("File open Error");
+                    exit(1);
+                    }
+                left_size = header.filesize;
+                do{
+                    nbytes = recvfrom(sock, buffer, MAXBUFSIZE, 0, (struct sockaddr *)&remote, &remote_length);
+                    printf("received %d\n",nbytes);
+                    fwrite(buffer, 1, nbytes, stream);
+                    left_size -= nbytes;
+
+                    if (left_size <= 0)
+                        break;
+                    if (nbytes < 0) {
+                        perror("recvfrom fail");
+                        exit(1);
+                    }
+                } while (1);
+                printf("file transmission finished and saved\n");
+                fclose(stream);
+
                 break;
-            // this works
             case PUT:
                     if ((stream = fopen(buffer, "rb")) == 0){
                         printf("Error");
@@ -196,7 +227,6 @@ int main(int argc, char *argv[]) {
             case DELETE:
                 strcpy(header.filename,buffer);
                 strcpy(header.command,command);
-
                 sendto(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, addrlen);
                 break;
             case LS:

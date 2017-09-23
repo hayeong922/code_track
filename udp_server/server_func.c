@@ -1,11 +1,3 @@
-// #include <stdio.h>
-// #include <stdlib.h>
-// #include <string.h>
-// #include <unistd.h>
-// #include <sys/types.h>
-// #include <sys/socket.h>
-// #include <netinet/in.h>
-
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -119,7 +111,10 @@ int main(int argc, char *argv[]) {
     struct sockaddr_in sin, remote;
     struct packet_header header;
     // int clnt_addr_size;
-    int addrlen = sizeof(sin);
+
+    // int addrlen = sizeof(sin);
+    // this part have been changed, feel free to uncomment it
+    int addrlen = sizeof(remote);
     int command_num;
     DIR *d;
     struct dirent *dir;
@@ -130,7 +125,7 @@ int main(int argc, char *argv[]) {
     }
 
     // 
-    memset(&sin, 0, addrlen); //bzero((char *)&servaddr,addrlen);
+    memset(&sin, 0, sizeof(sin)); //bzero((char *)&servaddr,addrlen);
     sin.sin_family = AF_INET;
     sin.sin_addr.s_addr = htonl(INADDR_ANY);
     sin.sin_port = htons(atoi(argv[1])); //argv[1]���� port ��ȣ ������ ��
@@ -161,16 +156,44 @@ int main(int argc, char *argv[]) {
         // call function that assign number to command input
         command_num = assign_command(header.command);
         // command_num = 2;
-        printf("command result: %d\n",strcmp(header.command,"delete"));
         printf("command_num: %d \n",command_num);
         strcpy(glob_filename,header.filename);
 
         switch(command_num){
             case GET:
-                run_get(glob_filename);
+                printf("get function called\n");
+                strcpy(buffer,glob_filename);
+                if ((stream = fopen(buffer, "rb")) == 0){
+                        printf("Error");
+                        exit(1);
+                    }
+                    if (stream)
+                    {
+                        strcpy(header.filename, buffer);
+
+                        fseek(stream, 0, SEEK_END); // end fo file
+                        header.filesize = ftell(stream);    // current value of the position indicator is returned
+                        // this part is added
+                        strcpy(header.command,"get");
+
+                        // send what command it is?
+                        sendto(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, addrlen);
+
+                        fseek(stream, 0, SEEK_SET); //seek beginning of the file
+
+                        while ((nbytes = fread(buffer,1,MAXBUFSIZE,stream)) != 0)
+                        {
+                            sendto(sock, buffer, nbytes, 0, (struct sockaddr*)&remote, addrlen);
+                            printf("sent %d\n",nbytes);
+                        }
+                        fclose(stream);
+                        close(sock); //socket close
+                        break;
+                    }
+                    printf("send file data\n");
+                // run_get(glob_filename);
                 break;
             case PUT:
-                printf("*************put************\n");
                 // run_put(sock,buffer,glob_filename,header.filesize);
                 if ((stream = fopen(header.filename, "w+b")) == NULL){
                     printf("File open Error");
@@ -198,7 +221,15 @@ int main(int argc, char *argv[]) {
                 break;
             case LS:
                 //imp
-                run_ls(&d,&dir);
+                // run_ls(&d,&dir);
+                d = opendir(".");
+                if(d){
+                    while((dir = readdir(d)) != NULL)
+                    if(dir->d_type == DT_REG){
+                        printf("%s\n",dir->d_name);
+                    }
+                    closedir(d);
+                }
                 break;
             case EXIT:
                 //imp
@@ -207,30 +238,6 @@ int main(int argc, char *argv[]) {
 
         }
         
-        // if ((stream = fopen(header.filename, "w+b")) == NULL){
-        //     printf("File open Error");
-        //     exit(1);
-        // }
-        // left_size = header.filesize;
-
-        // //file �̸� ���� �޾�����, fileũ�� ���۹޾Ҵٸ�
-        // //file ���� ���� �ޱ�
-        // do{
-        //     //���� ���� �޽��� nbyte ����,
-        //     nbytes = recvfrom(sock, buffer, MAXBUFSIZE, 0, (struct sockaddr *)&remote, &remote_length);
-        //     fwrite(buffer, 1, nbytes, stream);
-        //     left_size -= nbytes;
-
-        //     if (left_size <= 0)
-        //         break;
-        //     if (nbytes < 0) {
-        //         perror("recvfrom fail");
-        //         exit(1);
-        //     }
-        // } while (1);
-        // // printf("file transmission finished\n");
-        // printf("file transmission finished and saved\n");
-        // fclose(stream);
     } while (1);
     close(sock);
     return 0;

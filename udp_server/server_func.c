@@ -150,34 +150,34 @@ int main(int argc, char *argv[]) {
                         printf("Error");
                         exit(1);
                     }
+                if (stream){
+                    strcpy(header.filename, buffer);
 
-                    if (stream)
+                    fseek(stream, 0, SEEK_END); // end fo file
+                    header.filesize = ftell(stream);    // current value of the position indicator is returned
+
+                    // this part is added
+                    strcpy(header.command,"get");
+
+                    // send what command it is?
+                    printf("send in stream if\n");
+                    sendto(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, addrlen);
+
+                    fseek(stream, 0, SEEK_SET); //seek beginning of the file
+
+                    while ((nbytes = fread(buffer,1,MAXBUFSIZE,stream)) != 0)
                     {
-                        strcpy(header.filename, buffer);
-
-                        fseek(stream, 0, SEEK_END); // end fo file
-                        header.filesize = ftell(stream);    // current value of the position indicator is returned
-
-                        // this part is added
-                        strcpy(header.command,"get");
-
-                        // send what command it is?
-                        sendto(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, addrlen);
-
-                        fseek(stream, 0, SEEK_SET); //seek beginning of the file
-
-                        while ((nbytes = fread(buffer,1,MAXBUFSIZE,stream)) != 0)
-                        {
-                            sendto(sock, buffer, nbytes, 0, (struct sockaddr*)&remote, addrlen);
-                        }
-                        // printf("********File sent!!!!!!*****\n");
-                        fclose(stream);
-                        break;
+                        sendto(sock, buffer, nbytes, 0, (struct sockaddr*)&remote, addrlen);
                     }
-                    printf("send file data\n");
-                    strcpy(header.command,"successful file transmission.\n");
-
-                // run_get(glob_filename);
+                    // printf("********File sent!!!!!!*****\n");
+                    fclose(stream);
+                    printf("stream was just closed and is done transmitting\n");
+                    // added to check
+                    strcpy(header.command,"send file from server.\n");
+                    break;
+                }
+                // printf("send file data\n");
+                // strcpy(header.command,"successful file transmission.\n");
                 break;
             case PUT:
                 // run_put(sock,buffer,glob_filename,header.filesize);
@@ -238,20 +238,15 @@ int main(int argc, char *argv[]) {
                 //imp
                 // run_exit(glob_filename);
                 // char msg[] ="graceful exit\n";
-                strcpy(header.command,"graceful exit\n");
+                strcpy(header.command,"graceful exit.\n");
                 sendto(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, addrlen);
 
                 exit(0);
                 break;
 
         }
-        //when out of break after finished the mission send message to client, sendto()
-        // char msg[]=""
-        // sendto(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, addrlen);
-        // char msg[] ="File transimission finished and saved\n";
-        // strcpy(header.command,msg);
+
         sendto(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, addrlen);
-        // printf("file transmission finished and saved\n");
     
     } while (1);
     close(sock);

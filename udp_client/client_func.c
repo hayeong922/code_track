@@ -178,10 +178,6 @@ int main(int argc, char *argv[]) {
                     }
                     printf("send file data\n");
 
-                    // recvfrom(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, &remote_length);
-                    // printf("Server says %s\n",header.command);
-                    // recvfrom(sock, &header, sizeof(header), 0, (struct sockaddr*)&remote, &remote_length);
-                    // printf("Server says %s\n",header.command);
                 break;
             case DELETE:
                 strcpy(header.filename,buffer);
